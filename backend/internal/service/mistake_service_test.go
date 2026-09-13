@@ -303,3 +303,95 @@ func TestMistakeServiceCollectFromSubmission(t *testing.T) {
 		t.Errorf("total after re-collect = %d, want 1 (同一题不重复收录)", total)
 	}
 }
+
+// TestMistakeReviewDateRoundTrip 回归测试：服务器时区为 UTC+8 时，
+// 复习日期必须按输入日期原样保存、读取与展示，重复编辑保持同一天。
+func TestMistakeReviewDateRoundTrip(t *testing.T) {
+	// 模拟 UTC+8 服务器时区（复现"回读少一天"的环境）
+	oldLocal := time.Local
+	time.Local = time.FixedZone("UTC+8", 8*3600)
+	defer func() { time.Local = oldLocal }()
+
+	svc, _, userID, ctx := newMistakeTestService(t)
+	db := testMongo(t)
+
+	// 创建时显式设置下次复习日期
+	m, err := svc.Create(ctx, userID, &dto.CreateMistakeRequest{Title: "日期回归", NextReviewAt: "2026-09-20"})
+	if err != nil {
+		t.Fatalf("Create error: %v", err)
+	}
+	if m.NextReviewAt != "2026-09-20" {
+		t.Errorf("create response next_review_at = %s, want 2026-09-20", m.NextReviewAt)
+	}
+	id, _ := primitive.ObjectIDFromHex(m.ID)
+
+	// 回读（经 Mongo 存取）必须仍是输入日期
+	got, err := svc.Get(ctx, id, userID)
+	if err != nil {
+		t.Fatalf("Get error: %v", err)
+	}
+	if got.NextReviewAt != "2026-09-20" {
+		t.Errorf("after round-trip next_review_at = %s, want 2026-09-20 (保存后回读不得少一天)", got.NextReviewAt)
+	}
+
+	// 数据库中必须以 UTC 零点日历日期存储
+	var raw struct {
+		NextReviewAt time.Time `bson:"next_review_at"`
+	}
+	if err := db.Collection("mistakes").FindOne(ctx, bson.M{"_id": id}).Decode(&raw); err != nil {
+		t.Fatalf("read raw mistake: %v", err)
+	}
+	u := raw.NextReviewAt.UTC()
+	if u.Hour() != 0 || u.Minute() != 0 || u.Second() != 0 || u.Format("2006-01-02") != "2026-09-20" {
+		t.Errorf("stored next_review_at = %v, want 2026-09-20T00:00:00Z", u)
+	}
+
+	// 编辑记录修改日期，回读与接口展示一致
+	if _, err := svc.Update(ctx, id, userID, &dto.UpdateMistakeRequest{NextReviewAt: strPtr("2026-10-01")}); err != nil {
+		t.Fatalf("Update error: %v", err)
+	}
+	got, _ = svc.Get(ctx, id, userID)
+	if got.NextReviewAt != "2026-10-01" {
+		t.Errorf("after update next_review_at = %s, want 2026-10-01", got.NextReviewAt)
+	}
+
+	// 重复编辑其他字段，日期保持同一天
+	title := "日期回归（改）"
+	if _, err := svc.Update(ctx, id, userID, &dto.UpdateMistakeRequest{Title: &title}); err != nil {
+		t.Fatalf("Update title error: %v", err)
+	}
+	got, _ = svc.Get(ctx, id, userID)
+	if got.NextReviewAt != "2026-10-01" {
+		t.Errorf("after repeated edit next_review_at = %s, want 2026-10-01 (重复编辑保持同一天)", got.NextReviewAt)
+	}
+
+	// 复习时显式设置日期
+	if _, err := svc.Review(ctx, id, userID, &dto.ReviewMistakeRequest{Mastery: constants.MasteryLearning, NextReviewAt: strPtr("2026-11-11")}); err != nil {
+		t.Fatalf("Review error: %v", err)
+	}
+	got, _ = svc.Get(ctx, id, userID)
+	if got.NextReviewAt != "2026-11-11" {
+		t.Errorf("after review next_review_at = %s, want 2026-11-11", got.NextReviewAt)
+	}
+
+	// 复习不指定日期：按本地日历 +3 天（巩固中）
+	want := time.Now().AddDate(0, 0, 3).Format("2006-01-02")
+	resp, err := svc.Review(ctx, id, userID, &dto.ReviewMistakeRequest{Mastery: constants.MasteryLearning})
+	if err != nil {
+		t.Fatalf("Review auto error: %v", err)
+	}
+	if resp.NextReviewAt != want {
+		t.Errorf("auto schedule next_review_at = %s, want %s (本地日历 +3 天)", resp.NextReviewAt, want)
+	}
+
+	// 列表接口展示同样一致
+	list, _, err := svc.List(ctx, userID, dto.MistakeListQuery{Page: 1, PageSize: 10})
+	if err != nil || len(list) != 1 {
+		t.Fatalf("List error: %v len=%d", err, len(list))
+	}
+	if list[0].NextReviewAt != want {
+		t.Errorf("list next_review_at = %s, want %s", list[0].NextReviewAt, want)
+	}
+}
+
+func strPtr(s string) *string { return &s }

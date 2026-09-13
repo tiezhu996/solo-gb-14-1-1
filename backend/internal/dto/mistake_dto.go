@@ -62,6 +62,7 @@ type MistakeResponse struct {
 }
 
 // ToMistakeResponse 将错题模型转换为响应（due 表示已到复习时间）。
+// next_review_at 按 UTC 零点日历日期格式化，与输入日期原样一致，不受服务器时区影响。
 func ToMistakeResponse(m *model.Mistake) MistakeResponse {
 	resp := MistakeResponse{
 		ID:              m.ID.Hex(),
@@ -70,7 +71,7 @@ func ToMistakeResponse(m *model.Mistake) MistakeResponse {
 		ErrorReason:     m.ErrorReason,
 		ReviewNote:      m.ReviewNote,
 		Mastery:         m.Mastery,
-		NextReviewAt:    m.NextReviewAt.Format("2006-01-02"),
+		NextReviewAt:    m.NextReviewAt.UTC().Format("2006-01-02"),
 		ReviewCount:     m.ReviewCount,
 		Due:             !m.NextReviewAt.After(time.Now()),
 		CreatedAt:       m.CreatedAt.Format("2006-01-02 15:04:05"),

@@ -30,24 +30,31 @@ func NewMistakeService(mistakeRepo *repository.MistakeRepository, problemRepo *r
 	return &MistakeService{mistakeRepo: mistakeRepo, problemRepo: problemRepo, logger: logger}
 }
 
-// parseReviewDate 解析复习日期，支持 yyyy-MM-dd 与 RFC3339。
+// calendarDateUTC 取 t 在其时区下的日历日期，返回该日期的 UTC 零点。
+// 复习日期一律按日历日期（UTC 零点）存储与读取，避免服务器时区导致回读时日期偏移一天。
+func calendarDateUTC(t time.Time) time.Time {
+	y, m, d := t.Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
+}
+
+// parseReviewDate 解析复习日期，支持 yyyy-MM-dd 与 RFC3339；统一归一化为该日历日期的 UTC 零点。
 func parseReviewDate(s string) (time.Time, error) {
-	if t, err := time.ParseInLocation("2006-01-02", s, time.Local); err == nil {
+	if t, err := time.Parse("2006-01-02", s); err == nil {
 		return t, nil
 	}
 	if t, err := time.Parse(time.RFC3339, s); err == nil {
-		return t, nil
+		return calendarDateUTC(t), nil
 	}
 	return time.Time{}, fmt.Errorf("invalid review date: %s", s)
 }
 
-// defaultNextReview 按掌握状态计算默认下次复习日期。
+// defaultNextReview 按掌握状态计算默认下次复习日期（本地日历日期 +N 天，存 UTC 零点）。
 func defaultNextReview(mastery string) time.Time {
 	days := constants.MasteryReviewIntervalDays[mastery]
 	if days <= 0 {
 		days = 1
 	}
-	return time.Now().AddDate(0, 0, days)
+	return calendarDateUTC(time.Now().AddDate(0, 0, days))
 }
 
 // Create 手动收录错题（未传掌握状态默认未掌握，未传复习日期按掌握状态自动排期）。
