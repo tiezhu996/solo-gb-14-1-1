@@ -50,4 +50,11 @@ const (
 	LogAchievementChecked   = "achievement.checked"
 	LogLeaderboardQueried   = "leaderboard.queried"
 	LogDashboardQueried     = "dashboard.queried"
+	LogMistakeCreated       = "mistake.created"
+	LogMistakeUpdated       = "mistake.updated"
+	LogMistakeDeleted       = "mistake.deleted"
+	LogMistakeReviewed      = "mistake.reviewed"
+	LogMistakeAutoCollected = "mistake.auto_collected"
+	LogMistakeCollectFailed = "mistake.auto_collect_failed"
+	LogMistakeListFailed    = "mistake.list_failed"
 )

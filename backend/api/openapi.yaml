@@ -108,6 +108,69 @@ paths:
       security: [ { bearerAuth: [] } ]
       responses:
         '200': { description: ok }
+  /mistakes:
+    get:
+      summary: 错题列表（按题目关键词 q、知识点 knowledge_point、掌握状态 mastery、到期 due_only 筛选）
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: knowledge_point, in: query, schema: { type: string } }
+        - { name: mastery, in: query, schema: { type: string, enum: [unmastered, learning, mastered] } }
+        - { name: due_only, in: query, schema: { type: boolean } }
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: page_size, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: ok }
+    post:
+      summary: 收录错题（记录错误原因与复盘结论，可设置下次复习日期）
+      security: [ { bearerAuth: [] } ]
+      requestBody: { content: { application/json: { schema: { type: object, required: [title], properties: { title: { type: string }, problem_id: { type: string }, knowledge_points: { type: array, items: { type: string } }, error_reason: { type: string }, review_note: { type: string }, mastery: { type: string, enum: [unmastered, learning, mastered] }, next_review_at: { type: string, example: '2026-09-20' } } } } } }
+      responses:
+        '200': { description: ok }
+  /mistakes/due:
+    get:
+      summary: 到期待复习提醒列表
+      security: [ { bearerAuth: [] } ]
+      responses:
+        '200': { description: ok }
+  /mistakes/knowledge-points:
+    get:
+      summary: 当前用户错题知识点清单（去重）
+      security: [ { bearerAuth: [] } ]
+      responses:
+        '200': { description: ok }
+  /mistakes/{id}:
+    get:
+      summary: 错题详情
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: ok }
+    put:
+      summary: 修改错题（未提供的字段保持原值，掌握状态保留）
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody: { content: { application/json: { schema: { type: object } } } }
+      responses:
+        '200': { description: ok }
+    delete:
+      summary: 移除错题（仅删除该记录，不影响其他记录的掌握状态）
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: ok }
+  /mistakes/{id}/review:
+    post:
+      summary: 完成一次复习（更新掌握状态，缺省按 1/3/7 天自动排期下次复习）
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody: { content: { application/json: { schema: { type: object, required: [mastery], properties: { mastery: { type: string, enum: [unmastered, learning, mastered] }, next_review_at: { type: string, example: '2026-09-20' } } } } } }
+      responses:
+        '200': { description: ok }
 components:
   securitySchemes:
     bearerAuth:

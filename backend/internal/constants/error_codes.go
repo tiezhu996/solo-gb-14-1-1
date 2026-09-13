@@ -73,3 +73,10 @@ const (
 const (
 	CodeAuditNotFound = 8001
 )
+
+// 错题模块错误码
+const (
+	CodeMistakeNotFound = 9001
+	CodeMistakeDenied   = 9002
+	CodeMistakeMastery  = 9003
+)

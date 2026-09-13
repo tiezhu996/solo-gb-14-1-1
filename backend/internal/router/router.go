@@ -48,6 +48,7 @@ func New(deps Deps) *gin.Engine {
 	achievementRepo := repository.NewAchievementRepository(db)
 	auditRepo := repository.NewAuditRepository(db)
 	statRepo := repository.NewUserStatRepository(db)
+	mistakeRepo := repository.NewMistakeRepository(db)
 
 	// service
 	userService := service.NewUserService(userRepo, statRepo, deps.Logger, deps.JWTSecret)
@@ -55,7 +56,8 @@ func New(deps Deps) *gin.Engine {
 	courseService := service.NewCourseService(courseRepo, statRepo, deps.Logger)
 	problemService := service.NewProblemService(problemRepo, deps.Logger)
 	judgeService := service.NewJudgeService(deps.Logger, deps.JudgeTimeout)
-	submissionService := service.NewSubmissionService(submissionRepo, problemRepo, userRepo, statRepo, judgeService, achievementService, deps.Logger)
+	mistakeService := service.NewMistakeService(mistakeRepo, problemRepo, deps.Logger)
+	submissionService := service.NewSubmissionService(submissionRepo, problemRepo, userRepo, statRepo, judgeService, achievementService, mistakeService, deps.Logger)
 	discussionService := service.NewDiscussionService(discussionRepo, userRepo, problemRepo, deps.Logger)
 	leaderboardService := service.NewLeaderboardService(submissionRepo, userRepo, deps.Logger)
 	dashboardService := service.NewDashboardService(statRepo, userRepo, deps.Logger)
@@ -72,6 +74,7 @@ func New(deps Deps) *gin.Engine {
 	leaderboardHandler := handler.NewLeaderboardHandler(leaderboardService)
 	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 	auditHandler := handler.NewAuditHandler(auditService)
+	mistakeHandler := handler.NewMistakeHandler(mistakeService)
 
 	auth := middleware.Auth(deps.JWTSecret)
 	audit := middleware.Audit(auditService)
@@ -97,6 +100,7 @@ func New(deps Deps) *gin.Engine {
 		registerLeaderboardRoutes(api, leaderboardHandler, auth)
 		registerDashboardRoutes(api, dashboardHandler, auth)
 		registerAuditRoutes(api, auditHandler, auth, admin)
+		registerMistakeRoutes(api, mistakeHandler, auth, audit)
 	}
 
 	return r

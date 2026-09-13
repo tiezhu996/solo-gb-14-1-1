@@ -7,6 +7,7 @@ const navItems = [
   { to: '/courses', label: '课程中心', icon: '📚' },
   { to: '/problems', label: '题库练习', icon: '🧩' },
   { to: '/submissions', label: '我的提交', icon: '📝' },
+  { to: '/mistakes', label: '错题本', icon: '📕' },
   { to: '/leaderboard', label: '排行榜', icon: '🏆' },
   { to: '/achievements', label: '成就徽章', icon: '🎖️' },
 ]

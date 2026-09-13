@@ -1,9 +1,9 @@
 // 通用状态徽标：按枚举值映射颜色与文案
-import { DIFFICULTY_CLASSES, DIFFICULTY_LABELS, CONTENT_STATUS_LABELS, SUBMISSION_STATUS_CLASSES, SUBMISSION_STATUS_LABELS, ROLE_LABELS } from '../constants'
+import { DIFFICULTY_CLASSES, DIFFICULTY_LABELS, CONTENT_STATUS_LABELS, SUBMISSION_STATUS_CLASSES, SUBMISSION_STATUS_LABELS, ROLE_LABELS, MASTERY_CLASSES, MASTERY_LABELS } from '../constants'
 
 interface Props {
   value: string
-  kind?: 'difficulty' | 'content' | 'submission' | 'role' | 'default'
+  kind?: 'difficulty' | 'content' | 'submission' | 'role' | 'mastery' | 'default'
 }
 
 export default function StatusBadge({ value, kind = 'default' }: Props) {
@@ -21,6 +21,9 @@ export default function StatusBadge({ value, kind = 'default' }: Props) {
   } else if (kind === 'role') {
     label = ROLE_LABELS[value] || value
     className = value === 'admin' ? 'bg-violet-100 text-violet-700' : 'bg-sky-100 text-sky-700'
+  } else if (kind === 'mastery') {
+    label = MASTERY_LABELS[value] || value
+    className = MASTERY_CLASSES[value] || className
   }
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}>

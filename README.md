@@ -39,6 +39,7 @@ docker compose down -v --remove-orphans
 5. **排行榜与成就系统**：解题数量 × 难度加权积分（日榜 / 周榜 / 总榜）；成就徽章（连续签到 7 天、完成 10/100 题、首次通过困难题等）
 6. **讨论社区**：每道题专属讨论区，支持 Markdown 与代码块、点赞、按最佳答案排序
 7. **个人学习仪表盘**：累计学习时长、完成课程数、解题总数、各语言解题分布饼图、近 90 天每日学习热力图
+8. **错题复盘与复习提醒**：评测未通过自动收录 + 手动收录错题，记录错误原因与复盘结论；按题目/知识点/掌握状态查询；设置下次复习日期，到期列表提醒；修改或移除记录不影响当前掌握状态
 
 ## 技术栈
 
@@ -229,6 +230,14 @@ curl -sS -X POST http://localhost:3010/api/v1/problems \
 | GET | /api/v1/achievements/me | 我的徽章 | 登录 | AchievementService.ListMine |
 | GET | /api/v1/dashboard/me | 学习仪表盘 | 登录 | DashboardService.Get |
 | GET | /api/v1/audits | 审计日志 | 管理员 | AuditService.List |
+| GET | /api/v1/mistakes | 错题列表（题目/知识点/掌握状态/到期筛选） | 登录 | MistakeService.List |
+| GET | /api/v1/mistakes/due | 到期待复习提醒 | 登录 | MistakeService.ListDue（复用 List 筛选逻辑） |
+| GET | /api/v1/mistakes/knowledge-points | 错题知识点清单 | 登录 | MistakeService.KnowledgePoints |
+| GET | /api/v1/mistakes/:id | 错题详情 | 登录 | MistakeService.Get |
+| POST | /api/v1/mistakes | 收录错题 | 登录 | MistakeService.Create |
+| PUT | /api/v1/mistakes/:id | 修改错题（未传字段保留，掌握状态不变） | 登录 | MistakeService.Update |
+| DELETE | /api/v1/mistakes/:id | 移除错题 | 登录 | MistakeService.Delete |
+| POST | /api/v1/mistakes/:id/review | 完成复习（按 1/3/7 天自动排期） | 登录 | MistakeService.Review |
 
 > 复用标注：`POST /courses/:id/learn` 与 `POST /courses/:id/complete` 复用 `UserStatRepository` 原子累加；`/leaderboard` 与 `/dashboard` 复用 `SubmissionRepository`/`UserStatRepository` 统计；`Vote` 的点赞幂等复用 `DiscussionRepository.HasVoted`。
 
@@ -343,6 +352,21 @@ curl -sS -X POST http://localhost:3010/api/v1/problems \
 | 格式化 | `backend/internal/util/formatters.go`（FormatLanguageText） |
 | 前端常量 | `frontend/src/constants/index.ts`（LANGUAGES/LANGUAGE_LABELS） |
 | 前端 IDE | `frontend/src/pages/problems/ProblemDetail.tsx`、`frontend/src/components/LanguageSelect.tsx` |
+
+
+### 6. 错题掌握状态枚举（unmastered / learning / mastered）
+
+| 位置 | 文件 |
+| --- | --- |
+| 后端常量 | `backend/internal/constants/mastery.go`（ValidMastery/MasteryReviewIntervalDays） |
+| 模型 | `backend/internal/model/mistake.go`（Mastery） |
+| DTO | `backend/internal/dto/mistake_dto.go`（Create/Update/Review 请求校验） |
+| Service | `backend/internal/service/mistake_service.go`（复习排期状态机） |
+| 错误码 | `backend/internal/constants/error_codes.go`（CodeMistakeMastery） |
+| 格式化 | `backend/internal/util/formatters.go`（FormatMasteryText/FormatMasteryClass） |
+| 日志模板 | `backend/internal/constants/log_templates.go`（LogMistakeReviewed 等） |
+| 前端常量 | `frontend/src/constants/index.ts`（MASTERY/MASTERY_LABELS/MASTERY_CLASSES） |
+| 前端徽标 | `frontend/src/components/StatusBadge.tsx`（kind="mastery"）、`frontend/src/pages/mistakes/Mistakes.tsx` |
 
 ## 文件结构强制清单
 

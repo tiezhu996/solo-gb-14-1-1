@@ -161,3 +161,47 @@ export interface AuditLog {
   detail: string
   created_at: string
 }
+
+// 错题本记录（与后端 MistakeResponse 对齐）
+export interface Mistake {
+  id: string
+  problem_id?: string
+  title: string
+  knowledge_points: string[]
+  error_reason: string
+  review_note: string
+  mastery: string
+  next_review_at: string
+  last_reviewed_at?: string
+  review_count: number
+  due: boolean
+  created_at: string
+  updated_at: string
+}
+
+// 错题列表查询参数：按题目关键词、知识点、掌握状态、到期筛选
+export interface MistakeListParams {
+  q?: string
+  knowledge_point?: string
+  mastery?: string
+  due_only?: boolean
+  page?: number
+  page_size?: number
+}
+
+// 收录/修改错题的表单载荷（修改时未提供的字段保留原值，掌握状态不变）
+export interface MistakePayload {
+  title?: string
+  problem_id?: string
+  knowledge_points?: string[]
+  error_reason?: string
+  review_note?: string
+  mastery?: string
+  next_review_at?: string
+}
+
+// 完成一次复习的载荷
+export interface ReviewPayload {
+  mastery: string
+  next_review_at?: string
+}

@@ -92,3 +92,22 @@ export const LEADERBOARD_PERIOD_LABELS: Record<string, string> = {
   weekly: '周榜',
   total: '总榜',
 }
+
+// 错题掌握状态枚举：与后端 internal/constants/mastery.go 一一对应
+export const MASTERY = {
+  unmastered: 'unmastered',
+  learning: 'learning',
+  mastered: 'mastered',
+} as const
+
+export const MASTERY_LABELS: Record<string, string> = {
+  unmastered: '未掌握',
+  learning: '巩固中',
+  mastered: '已掌握',
+}
+
+export const MASTERY_CLASSES: Record<string, string> = {
+  unmastered: 'bg-rose-100 text-rose-700',
+  learning: 'bg-amber-100 text-amber-700',
+  mastered: 'bg-emerald-100 text-emerald-700',
+}

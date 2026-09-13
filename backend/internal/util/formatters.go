@@ -122,6 +122,34 @@ func FormatLanguageText(lang string) string {
 	}
 }
 
+// FormatMasteryText 错题掌握状态文本（掌握状态机 -> 前端徽标）。
+func FormatMasteryText(m string) string {
+	switch m {
+	case constants.MasteryUnmastered:
+		return "未掌握"
+	case constants.MasteryLearning:
+		return "巩固中"
+	case constants.MasteryMastered:
+		return "已掌握"
+	default:
+		return "未知"
+	}
+}
+
+// FormatMasteryClass 掌握状态对应的 Tailwind 徽标类名。
+func FormatMasteryClass(m string) string {
+	switch m {
+	case constants.MasteryUnmastered:
+		return "bg-rose-100 text-rose-700"
+	case constants.MasteryLearning:
+		return "bg-amber-100 text-amber-700"
+	case constants.MasteryMastered:
+		return "bg-emerald-100 text-emerald-700"
+	default:
+		return "bg-gray-100 text-gray-700"
+	}
+}
+
 // FormatUserStatusText 用户状态文本。
 func FormatUserStatusText(s string) string {
 	switch s {

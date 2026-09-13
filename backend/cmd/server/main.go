@@ -116,5 +116,8 @@ func ensureIndexes(ctx context.Context, mongo *database.Mongo) error {
 	if err := repository.NewUserStatRepository(db).EnsureIndexes(ctx); err != nil {
 		return err
 	}
+	if err := repository.NewMistakeRepository(db).EnsureIndexes(ctx); err != nil {
+		return err
+	}
 	return nil
 }

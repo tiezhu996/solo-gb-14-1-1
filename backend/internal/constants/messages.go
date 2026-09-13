@@ -51,6 +51,14 @@ const (
 	MsgAchievementNotFound = "成就徽章不存在"
 	MsgLeaderboardEmpty    = "排行榜暂无数据"
 
+	MsgMistakeNotFound   = "错题记录不存在"
+	MsgMistakeDenied     = "无权操作该错题记录"
+	MsgMistakeMastery    = "无效的掌握状态 %s"
+	MsgMistakeCreated    = "已收录到错题本"
+	MsgMistakeUpdated    = "错题记录已更新"
+	MsgMistakeDeleted    = "错题记录已移除"
+	MsgMistakeReviewedOK = "复习完成，掌握状态已更新为 %s"
+
 	MsgInvalidID      = "无效的 %s ID"
 	MsgRequestID      = "请求 ID: %s"
 	MsgHealthOK       = "codelearn backend is healthy"

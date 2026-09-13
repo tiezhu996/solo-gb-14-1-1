@@ -25,13 +25,14 @@ type SubmissionService struct {
 	statRepo     *repository.UserStatRepository
 	judge        *JudgeService
 	achievement  *AchievementService
+	mistake      *MistakeService
 	logger       *slog.Logger
 }
 
 // NewSubmissionService 构造提交评测服务。
 func NewSubmissionService(subRepo *repository.SubmissionRepository, problemRepo *repository.ProblemRepository,
 	userRepo *repository.UserRepository, statRepo *repository.UserStatRepository, judge *JudgeService,
-	achievement *AchievementService, logger *slog.Logger) *SubmissionService {
+	achievement *AchievementService, mistake *MistakeService, logger *slog.Logger) *SubmissionService {
 	return &SubmissionService{
 		subRepo:     subRepo,
 		problemRepo: problemRepo,
@@ -39,6 +40,7 @@ func NewSubmissionService(subRepo *repository.SubmissionRepository, problemRepo 
 		statRepo:    statRepo,
 		judge:       judge,
 		achievement: achievement,
+		mistake:     mistake,
 		logger:      logger,
 	}
 }
@@ -101,6 +103,12 @@ func (s *SubmissionService) Submit(ctx context.Context, userID primitive.ObjectI
 		}
 		// 成就检查：首次通过/完成 N 题/首次通过困难题。
 		s.achievement.CheckAfterSubmission(ctx, userID, status, problem)
+	} else {
+		// 未通过自动收录错题本（已收录则跳过，不覆盖掌握状态与复盘记录）；
+		// 收录失败不影响评测主流程，仅记录日志。
+		if err := s.mistake.CollectFromSubmission(ctx, userID, problemID); err != nil {
+			s.logger.Warn(constants.LogMistakeCollectFailed, "user_id", userID.Hex(), "problem_id", problemID.Hex(), "error", err.Error())
+		}
 	}
 
 	sub.Status = status

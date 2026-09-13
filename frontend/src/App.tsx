@@ -12,6 +12,7 @@ import CourseDetail from './pages/courses/CourseDetail'
 import Problems from './pages/problems/Problems'
 import ProblemDetail from './pages/problems/ProblemDetail'
 import Submissions from './pages/submissions/Submissions'
+import Mistakes from './pages/mistakes/Mistakes'
 import Leaderboard from './pages/leaderboard/Leaderboard'
 import Achievements from './pages/achievements/Achievements'
 import AdminCourses from './pages/admin/AdminCourses'
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/problems" element={<Problems />} />
           <Route path="/problems/:id" element={<ProblemDetail />} />
           <Route path="/submissions" element={<Submissions />} />
+          <Route path="/mistakes" element={<Mistakes />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/achievements" element={<Achievements />} />
         </Route>
